@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PadhAI – Study Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>PadhAI – AI Study Assistant</h1>
+        <p>Upload notes and ask questions from them</p>
+    </header>
+
+    <main>
+        <!-- PDF Upload Section -->
+        <section class="card">
+            <h2>Upload PDF Notes</h2>
+            <input type="file" id="pdfFile" accept="application/pdf">
+            <button onclick="uploadPDF()">Upload</button>
+            <p id="uploadStatus"></p>
+        </section>
+
+        <!-- Chat Section -->
+        <section class="card">
+            <h2>Chat With Your Notes</h2>
+            <div id="chatBox"></div>
+
+            <input
+                type="text"
+                id="questionInput"
+                placeholder="Ask a question from your notes..."
+            >
+            <button onclick="askQuestion()">Ask</button>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

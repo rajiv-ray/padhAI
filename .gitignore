@@ -1,0 +1,49 @@
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / coverage / test files
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache
+pytest_cache/
+
+# Jupyter Notebook checkpoints (if any)
+.ipynb_checkpoints
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Logs
+*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node / frontend files
+node_modules/
+*.js.map
+*.css.map
+
+# Firebase credentials or service files (if any sensitive)
+firebase/*.json
