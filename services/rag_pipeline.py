@@ -1,21 +1,36 @@
-from services.gemini_client import get_embedding
+from services.local_embeddings import get_embedding
 from services.vector_store import query_vectors
-import google.generativeai as genai
+from services.gemini_client import generate_answer
 
-def ask_question(question):
-    q_embedding = get_embedding(question)
-    results = query_vectors(q_embedding)
+def ask_question(question: str) -> str:
+    # 1️⃣ Embed the question
+    query_embedding = get_embedding(question)
 
-    context = " ".join(results["documents"][0])
+    # 2️⃣ Retrieve relevant chunks
+    docs = query_vectors(query_embedding, top_k=3)
 
+    if not docs:
+        return "Answer not found in the document."
+
+    # 3️⃣ Build context
+    context = "\n\n".join(docs)
+
+    # 4️⃣ 🔥 QUESTION-AWARE PROMPT (THIS IS THE FIX)
     prompt = f"""
-    Answer strictly from the context below:
-    {context}
+You are a study assistant.
+Answer the question STRICTLY using the document context below.
 
-    Question: {question}
-    """
+Document context:
+{context}
 
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    response = model.generate_content(prompt)
+Question:
+{question}
 
-    return response.text
+Rules:
+- Answer only what is asked
+- Be concise and clear
+- If answer is not in context, say: "Answer not found in the document."
+"""
+
+    # 5️⃣ Let Gemini think
+    return generate_answer(prompt)

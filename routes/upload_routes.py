@@ -1,57 +1,38 @@
-import os
 from flask import Blueprint, request, jsonify
-
 from services.pdf_loader import extract_text
 from services.text_chunker import chunk_text
-from services.embeddings import generate_embeddings
-from services.vector_store import store_chunks
+from services.vector_store import store_chunks, clear_collection
+from services.local_embeddings import get_embedding
 
-# Blueprint
-upload_bp = Blueprint("upload", __name__)
+# ✅ url_prefix FIXED
+upload_bp = Blueprint("upload", __name__, url_prefix="/upload")
 
-UPLOAD_FOLDER = "temp_uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-@upload_bp.route("/upload", methods=["POST"])
+@upload_bp.route("/pdf", methods=["POST"])
 def upload_pdf():
     if "file" not in request.files:
-        return jsonify({"error": "No file part"}), 400
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
 
-    if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+    # 🔥 Remove old PDF data
+    clear_collection()
 
-    if not file.filename.lower().endswith(".pdf"):
-        return jsonify({"error": "Only PDF files allowed"}), 400
+    # 📄 Extract text
+    text = extract_text(file)
 
-    # Save PDF temporarily
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
+    if not text or not text.strip():
+        return jsonify({"error": "No readable text found in PDF"}), 400
 
-    try:
-        # 1. Extract text
-        text = extract_text(file_path)
+    # ✂️ Chunk text
+    chunks = chunk_text(text)
 
-        # 2. Chunk text
-        chunks = chunk_text(text)
+    # ⚡ Prevent repetition & slowness
+    chunks = chunks[:100]
 
-        # 3. Generate embeddings
-        embeddings = generate_embeddings(chunks)
+    # 🧠 Local embeddings
+    embeddings = [get_embedding(chunk) for chunk in chunks]
 
-        # 4. Store in vector DB
-        store_chunks(chunks, embeddings)
+    # 📦 Store vectors
+    store_chunks(chunks, embeddings)
 
-        return jsonify({
-            "message": "PDF uploaded and processed successfully",
-            "chunks": len(chunks)
-        }), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        # Cleanup uploaded file
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    return jsonify({"message": "PDF uploaded & processed successfully"})
